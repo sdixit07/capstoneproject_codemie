@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -18,6 +20,8 @@ public class ProductController {
 
     @Autowired
     public ProductService productService;
+
+    private static final Set<String> ALLLOWED_SORT_FIELDS = Set.of("id", "name", "price");
 
     /**
      * GET /api/products?page=0&size=12&search=phone&categoryId=1&sort=price,asc
@@ -48,11 +52,15 @@ public class ProductController {
 
     private Sort parseSort(String sort) {
         if (sort == null || sort.isBlank()) {
-            return Sort.by("d").ascending();
+            return Sort.by("price").ascending();
         }
 
         String[] parts = sort.split(",");
         String property = parts[0].trim();
+        if (!ALLOWED_SORT_FIELDS.contains(property)) {
+            property = "price";
+        }
+
         Sort.Direction direction = Sort.Direction.ASC;
         if (parts.length > 1) {
             try {
