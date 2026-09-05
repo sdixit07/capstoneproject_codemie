@@ -1,4 +1,4 @@
-import { useEffect, useFirst, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProductList from './ProductList';
@@ -104,7 +104,7 @@ function App() {
           />
         </div>
 
-        <div className="col-md4- col-sm-12 mb-2">
+        <div className="col-md-4 col-sm-12 mb-2">
           <select className="form-control" value={sort} onChange={handleSortChange}>
             <option value="price,asc">Sort by Price: Low to High</option>
             <option value="price,desc">Sort by Price: High to Low</option>
@@ -122,8 +122,7 @@ function App() {
           <button className="btn btn-outline-primary" disabled={!canPrev || loading} onClick={() => setPage(p => p - 1)}>
             Prev
           </button>
-          <span>
-Page {totalPages === 0 ? 0 : page + 1} of {totalPages}</span>
+          <span>Page {totalPages === 0 ? 0 : page + 1} of {totalPages}</span>
           <button className="btn btn-outline-primary" disabled={!canNext || loading} onClick={() => setPage(p => p + 1)}>
             Next
           </button>
@@ -133,12 +132,12 @@ Page {totalPages === 0 ? 0 : page + 1} of {totalPages}</span>
       {error && <div className="alert alert-danger">{error}</div>}
       {loading && <p>Loading...</p>}
 
-     <div>
+      <div>
         {!loading && !error && products.length > 0 ? (
-          <ProductList products={products} />
-        ) : (!loading && !error ? (
-          <p>No products to display.</p>
-        ) : null)}
+            <ProductList products={products} />
+          ) : (!loading && !error ? (
+            <p>No products to display.</p>
+          ) : null)}
       </div>
     </div>
   );
