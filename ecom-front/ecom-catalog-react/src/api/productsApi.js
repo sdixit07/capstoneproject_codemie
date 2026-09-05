@@ -15,7 +15,7 @@ function buildQuery(params) {
 
 export async function fetchProducts({ page = 0, size = 12, search = '', categoryId = null, sort = 'price,asc' }) {
   const query = buildQuery({ page, size, search, categoryId, sort });
-  const res = await fetch(`${API_BASE]/api/products${query}`);
+  const res = await fetch(`${API_BASE}/api/products${query}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch products: ${res.status}`);
   }
