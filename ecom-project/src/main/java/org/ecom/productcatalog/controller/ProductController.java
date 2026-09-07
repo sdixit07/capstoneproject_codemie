@@ -7,6 +7,7 @@ import org.ecom.productcatalog.specification.ProductSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.ecom.productcatalog.specification.ProductSpecifications;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -66,7 +67,7 @@ public class ProductController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sort direction must be asc or desc");
         }
 
-        PageRequest pageable = PageRequest.of(page, resolvedSize, org.springframework.data.domain.Sort.by(direction, sortBy));
+        PageRequest pageable = PageRequest.of(page, resolvedSize, Sort.by(direction, sortBy));
 
         Specification<Product> spec = Specification.where(ProductSpecifications.nameContainsIgnoreCase(search))
                 .and(ProductSpecifications.hasCategoryId(categoryId));
@@ -74,12 +75,12 @@ public class ProductController {
         Page<Product> result = productRepository.findAll(spec, pageable);
 
         PagedResponse.Page pageMeta = new PagedResponse.Page(
-            result.getNumber(),
-            result.getSize(),
-            result.getTotalElements(),
-            result.getTotalPages(),
-            result.isFirst(),
-            result.isLast()
+             result.getNumber(),
+             result.getSize(),
+             result.getTotalElements(),
+             result.getTotalPages(),
+             result.isFirst(),
+             result.isLast()
         );
 
         PagedResponse.Sort sortMeta = new PagedResponse.Sort(sortBy, direction.name().toLowerCase());
@@ -89,7 +90,8 @@ public class ProductController {
 
     // Backwards-compatibility endpoint
     @GetMapping("category/{categoryId}")
-    public List<Product> getProductByCategory(@PathVariable Long categoryId) {
-        return productRepository.findAll(Specification.where(ProductSpecifications.hasCategoryId(categoryId)));
+    public List<Product> getProductsByCategory(@PathVariable Long categoryId) {
+        Specification<Product> spec = Specification.where(ProductSpecifications.hasCategoryId(categoryId));
+        return productRepository.findAll(spec);
     }
 }
