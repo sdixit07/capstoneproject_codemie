@@ -12,7 +12,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
 
 # Single-page app: routing fallback to index.html
-RUN cat > /etc/nginx/conf.d/default.conf << EEOF
+RUN cat > /etc/nginx/conf.d/default.conf <<'EEOF'
 server {
   listen 80;
   server_name _;
@@ -21,7 +21,7 @@ server {
   index index.html;
 
   location / {
-    try_files $uri /sindex.html;
+    try_files $uri /index.html;
   }
 }
 EEOF

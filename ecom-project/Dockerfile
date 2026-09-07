@@ -13,7 +13,7 @@ RUN mvn -q -D skipTests package
 FROM eclipse-temurin:21-jre-jammy as runtime
 WORKDIR /app
 
-ENV SPRING_PROFILE_ACTIVE=default
+ENV SPRING_PROFILES_ACTIVE=default
 EXPOSE 8080
 
 COPY --from=build /app/target/*.jar /app/app.jar
