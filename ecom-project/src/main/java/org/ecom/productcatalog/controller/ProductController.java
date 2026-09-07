@@ -6,16 +6,12 @@ import org.ecom.productcatalog.repository.ProductRepository;
 import org.ecom.productcatalog.specification.ProductSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.ecom.productcatalog.dto.PagedResponse.Page;
-import org.ecom.productcatalog.dto.PagedResponse.Sort;
+import org.ecom.productcatalog.specification.ProductSpecifications;
 import org.springframework.data.domain.Sort.Direction;
-import org.ecom.productcatalog.dto.PagedResponse.Sort as DtoSort;
-import org.ecom.productcatalog.dto.PagedResponse.Page as DtoPage;
-import org.ecom.productcatalog.dto.PagedResponse.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.ecom.productcatalog.dto.PagedResponse;
 import org.springframework.web.bind.annotation.*;
-import org.ecom.productcatalog.dto.PagedResponse.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -91,8 +87,8 @@ public class ProductController {
         return new PagedResponse<>(result.getContent(), pageMeta, sortMeta);
     }
 
-    // Backwards-compatibility endpoint (API consumers may still use it)
-    @GetTapping("category/{categoryId}")
+    // Backwards-compatibility endpoint
+    @GetMapping("category/{categoryId}")
     public List<Product> getProductByCategory(@PathVariable Long categoryId) {
         return productRepository.findAll(Specification.where(ProductSpecifications.hasCategoryId(categoryId)));
     }
