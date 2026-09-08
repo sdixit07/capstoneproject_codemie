@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-
 import { fetchCategories, fetchProducts } from './productsApi';
 
 describe('productsApi', () => {
@@ -16,12 +15,12 @@ describe('productsApi', () => {
   it('fetchProducts sends query params and returns json', async () => {
     globalThis.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ items: [], page: 0, size: 12, totalItems: 0, totalPages: 0 })
+      json: async () => ({ content: [], page: 0, size: 12, totalElements: 0, totalPages: 0, last: true })
     });
 
     const data = await fetchProducts({ page: 1, size: 5, search: 'phone', categoryId: 2, sort: 'price,desc' });
-    expect(globalThis.fetch).orOnlyCalled();
-    expect(data).toHaveProperty('items');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(data).toHaveProperty('content');
   });
 
   it('fetchCategories sends request to /api/categories', async () => {
