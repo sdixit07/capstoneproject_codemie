@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Price range filter */
+.price-filter input[type="number"] {
+  min-width: 0;
+}
+
+.price-filter-error {
+  color: #d9534f;
+  font-size: 0.875rem;
+  margin-top: 0.35rem;
+  text-align: left;
+}
