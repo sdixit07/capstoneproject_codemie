@@ -3,6 +3,9 @@ package org.ecom.productcatalog.service;
 import org.ecom.productcatalog.Product;
 import org.ecom.productcatalog.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,16 @@ public class ProductService {
     public static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "name", "price");
     public static final String DEFAULT_SORT_BY = "id";
     public static final String DEFAULT_SORT_DIR = "asc";
+
+    /** Paging bounds. Unlike the sort params these are validated strictly (400 on violation). */
+    public static final int DEFAULT_PAGE = 0;
+    public static final int DEFAULT_SIZE = 10;
+    public static final int MIN_SIZE = 1;
+    public static final int MAX_SIZE = 50;
+
+    /** String forms of the paging defaults, for @RequestParam defaultValue (needs a constant). */
+    public static final String DEFAULT_PAGE_PARAM = "0";
+    public static final String DEFAULT_SIZE_PARAM = "10";
 
     @Autowired
     public ProductRepository productRepository;
@@ -34,6 +47,53 @@ public class ProductService {
 
     public List<Product> getProductByCategory(Long categoryId, String sortBy, String sortDir){
         return productRepository.findByCategoryId(categoryId, buildSort(sortBy, sortDir));
+    }
+
+    /** Returns one page of the whole catalog. */
+    public Page<Product> getProductsPage(int page, int size, String sortBy, String sortDir){
+        return productRepository.findAll(buildPageable(page, size, sortBy, sortDir));
+    }
+
+    /** Returns one page of a single category. */
+    public Page<Product> getProductsByCategoryPage(Long categoryId, int page, int size, String sortBy, String sortDir){
+        return productRepository.findByCategoryId(categoryId, buildPageable(page, size, sortBy, sortDir));
+    }
+
+    /**
+     * Builds a {@link Pageable} for the given raw request params.
+     *
+     * @throws IllegalArgumentException if page or size are outside the supported bounds;
+     *                                 the controller turns this into an HTTP 400.
+     */
+    public static Pageable buildPageable(int page, int size, String sortBy, String sortDir){
+        validatePaging(page, size);
+        return PageRequest.of(page, size, buildDeterministicSort(sortBy, sortDir));
+    }
+
+    /** Rejects out of range paging params instead of silently clamping them. */
+    public static void validatePaging(int page, int size){
+        if (page < 0) {
+            throw new IllegalArgumentException("page must not be negative (was " + page + ")");
+        }
+        if (size < MIN_SIZE) {
+            throw new IllegalArgumentException("size must be at least " + MIN_SIZE + " (was " + size + ")");
+        }
+        if (size > MAX_SIZE) {
+            throw new IllegalArgumentException("size must not be greater than " + MAX_SIZE + " (was " + size + ")");
+        }
+    }
+
+    /**
+     * Same allow-list as {@link #buildSort(String, String)} but always ends with id ascending.
+     * Without that tiebreaker two products with equal name or price could swap places between
+     * requests, which makes paging skip or repeat rows.
+     */
+    public static Sort buildDeterministicSort(String sortBy, String sortDir){
+        Sort sort = buildSort(sortBy, sortDir);
+        if (sort.getOrderFor(DEFAULT_SORT_BY) != null) {
+            return sort;
+        }
+        return sort.and(Sort.by(Sort.Direction.ASC, DEFAULT_SORT_BY));
     }
 
     /**

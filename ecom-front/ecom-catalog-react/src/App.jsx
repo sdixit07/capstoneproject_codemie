@@ -3,7 +3,15 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import ProductList from './ProductList'
 import CategoryFilter from './CategoryFilter'
-import { fetchCategories, fetchProducts, DEFAULT_SORT_BY, DEFAULT_SORT_DIR } from './api/productsApi'
+import Pagination from './Pagination'
+import {
+  fetchCategories,
+  fetchProducts,
+  DEFAULT_SORT_BY,
+  DEFAULT_SORT_DIR,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+} from './api/productsApi'
 
 // value is "<sortBy>:<sortDir>" so a single select can drive both backend params.
 const SORT_OPTIONS = [
@@ -14,60 +22,82 @@ const SORT_OPTIONS = [
   { value: 'name:desc', label: 'Sort by Name: Z to A' },
 ];
 
+const EMPTY_PAGE = {
+  content: [],
+  page: DEFAULT_PAGE,
+  size: DEFAULT_PAGE_SIZE,
+  totalElements: 0,
+  totalPages: 0,
+  sort: '',
+};
+
 function App() {
-  const [products, setProducts] = useState([]);
+  // One page of products at a time - the full catalog is never fetched.
+  const [productPage, setProductPage] = useState(EMPTY_PAGE);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState(DEFAULT_SORT_BY);
   const [sortDir, setSortDir] = useState(DEFAULT_SORT_DIR);
+  const [page, setPage] = useState(DEFAULT_PAGE);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchCategories()
-      .then(data => setCategories(data))
+      .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(err => console.error('Unable to load categories', err));
   }, []);
 
-  // Products are re-fetched whenever the category or the sort order changes,
-  // so ordering always comes from the backend.
+  // Products are re-fetched whenever the page, the category or the sort order
+  // changes, so both ordering and paging come from the backend.
   useEffect(() => {
     let ignore = false;
 
-    fetchProducts({ categoryId: selectedCategory, sortBy, sortDir })
+    fetchProducts({ categoryId: selectedCategory, page, size: DEFAULT_PAGE_SIZE, sortBy, sortDir })
       .then(data => {
         if (ignore) return;
-        setProducts(data);
+        setProductPage(data);
         setError(null);
       })
       .catch(err => {
         if (ignore) return;
         console.error('Unable to load products', err);
-        setProducts([]);
+        setProductPage(EMPTY_PAGE);
         setError('Unable to load products. Please try again.');
       });
 
     return () => { ignore = true; };
-  }, [selectedCategory, sortBy, sortDir]);
+  }, [selectedCategory, sortBy, sortDir, page]);
 
+  // Changing what is being looked at always restarts from the first page,
+  // otherwise the user can land on a page that no longer exists.
   const handleSearchChange = (event) =>{
     setSearchTerm(event.target.value);
+    setPage(DEFAULT_PAGE);
   };
 
   const handleSortChange = (event) =>{
     const [nextSortBy, nextSortDir] = event.target.value.split(':');
     setSortBy(nextSortBy);
     setSortDir(nextSortDir);
+    setPage(DEFAULT_PAGE);
   };
 
   const handleCategorySelect = (categoryId) =>{
     setSelectedCategory(categoryId ? Number(categoryId) : null);
+    setPage(DEFAULT_PAGE);
   };
 
-  // Only the free text search stays on the client; filtering by category and
-  // sorting are both handled by the backend.
-  const visibleProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const handlePageChange = (nextPage) =>{
+    if (nextPage < 0) return;
+    setPage(nextPage);
+  };
+
+  // The backend has no name search yet, so the free text filter is applied to
+  // the current page only - deliberately, since fetching the whole catalog to
+  // search it is exactly what server side paging is meant to avoid.
+  const visibleProducts = productPage.content.filter(product =>
+    (product.name ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -112,7 +142,15 @@ function App() {
           <p>No prodcuts to display.</p>
         )}
       </div>
-      
+
+      {!error && (
+        <Pagination
+          page={productPage.page}
+          totalPages={productPage.totalPages}
+          totalElements={productPage.totalElements}
+          onPageChange={handlePageChange} />
+      )}
+
     </div>
   )
 }

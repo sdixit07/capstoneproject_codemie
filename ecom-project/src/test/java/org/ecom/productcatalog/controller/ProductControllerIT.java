@@ -77,11 +77,17 @@ class ProductControllerIT {
     }
 
     @Test
-    void getProducts_noParams_returnsWholeCatalog() throws Exception {
+    void getProducts_noParams_returnsFirstPageWithMetadata() throws Exception {
         mockMvc.perform(get("/api/products").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$", hasSize(27)));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content", hasSize(10)))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(27))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.sort").value("id: ASC"))
+                .andExpect(jsonPath("$.content[0].name").value("iPhone 1"));
     }
 
     @Test
@@ -103,7 +109,7 @@ class ProductControllerIT {
                         .param("sortDir", "desc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].price").value(125.0));
+                .andExpect(jsonPath("$.content[0].price").value(125.0));
     }
 
     @Test
@@ -113,7 +119,7 @@ class ProductControllerIT {
                         .param("sortDir", "bogus")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("iPhone 1"));
+                .andExpect(jsonPath("$.content[0].name").value("iPhone 1"));
     }
 
     @Test
@@ -123,7 +129,7 @@ class ProductControllerIT {
                         .param("sortDir", "desc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains("Winter jacket", "Socks")));
+                .andExpect(jsonPath("$.content[*].name", contains("Winter jacket", "Socks")));
     }
 
     @Test
@@ -236,6 +242,133 @@ class ProductControllerIT {
         mockMvc.perform(get("/api/products/category/{categoryId}", clothingId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void getProducts_pageAndSizeAreHonoured() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "1")
+                        .param("size", "5")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(5)))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(27))
+                .andExpect(jsonPath("$.totalPages").value(6))
+                .andExpect(jsonPath("$.content[*].name", contains(
+                        "iPhone 6", "iPhone 7", "iPhone 8", "iPhone 9", "iPhone 10")));
+    }
+
+    @Test
+    void getProducts_lastPageMayBePartial() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "2")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(7)))
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.totalPages").value(3));
+    }
+
+    @Test
+    void getProducts_pageBeyondLast_returnsEmptyContentButKeepsMetadata() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "99")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements").value(27))
+                .andExpect(jsonPath("$.totalPages").value(3));
+    }
+
+    @Test
+    void getProducts_maximumSizeIsAccepted() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("size", "50")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(50))
+                .andExpect(jsonPath("$.content", hasSize(27)))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void getProducts_pagingCombinesWithSorting() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "0")
+                        .param("size", "3")
+                        .param("sortBy", "price")
+                        .param("sortDir", "desc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].price", contains(125.0, 124.0, 123.0)))
+                .andExpect(jsonPath("$.sort").value("price: DESC,id: ASC"));
+    }
+
+    @Test
+    void getProducts_negativePage_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "-1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.path").value("/api/products"))
+                .andExpect(jsonPath("$.message", containsString("page must not be negative")));
+    }
+
+    @Test
+    void getProducts_sizeBelowOne_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("size", "0")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("size must be at least 1")));
+    }
+
+    @Test
+    void getProducts_sizeAboveMaximum_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("size", "51")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("size must not be greater than 50")));
+    }
+
+    @Test
+    void getProducts_nonNumericPagingParams_returnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("page", "first")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/products")
+                        .param("size", "many")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getProductsByCategoryPath_isPagedToo() throws Exception {
+        mockMvc.perform(get("/api/products/category/{categoryId}", catId)
+                        .param("page", "1")
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(10)))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.totalElements").value(25))
+                .andExpect(jsonPath("$.totalPages").value(3));
+    }
+
+    @Test
+    void getProductsByCategoryPath_invalidSize_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/products/category/{categoryId}", clothingId)
+                        .param("size", "0")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }

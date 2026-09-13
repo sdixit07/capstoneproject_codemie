@@ -74,8 +74,8 @@ class ProductSortingTests {
     void getProducts_noSortParams_defaultsToIdAscending() throws Exception {
         mockMvc.perform(get("/api/products").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
-                .andExpect(jsonPath("$[*].name", contains(
+                .andExpect(jsonPath("$.content", hasSize(5)))
+                .andExpect(jsonPath("$.content[*].name", contains(
                         "Zephyr Speaker", "Alpha Laptop", "Mid Monitor", "Yankee Socks", "Beta Jacket")));
     }
 
@@ -86,7 +86,7 @@ class ProductSortingTests {
                         .param("sortDir", "desc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].price", contains(900.0, 300.0, 120.0, 50.0, 10.0)));
+                .andExpect(jsonPath("$.content[*].price", contains(900.0, 300.0, 120.0, 50.0, 10.0)));
     }
 
     @Test
@@ -96,7 +96,7 @@ class ProductSortingTests {
                         .param("sortDir", "asc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].price", contains(10.0, 50.0, 120.0, 300.0, 900.0)));
+                .andExpect(jsonPath("$.content[*].price", contains(10.0, 50.0, 120.0, 300.0, 900.0)));
     }
 
     @Test
@@ -106,7 +106,7 @@ class ProductSortingTests {
                         .param("sortDir", "asc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains(
+                .andExpect(jsonPath("$.content[*].name", contains(
                         "Alpha Laptop", "Beta Jacket", "Mid Monitor", "Yankee Socks", "Zephyr Speaker")));
     }
 
@@ -117,7 +117,7 @@ class ProductSortingTests {
                         .param("sortDir", "desc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains(
+                .andExpect(jsonPath("$.content[*].name", contains(
                         "Zephyr Speaker", "Yankee Socks", "Mid Monitor", "Beta Jacket", "Alpha Laptop")));
     }
 
@@ -128,7 +128,7 @@ class ProductSortingTests {
                         .param("sortDir", "DESC")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].price", contains(900.0, 300.0, 120.0, 50.0, 10.0)));
+                .andExpect(jsonPath("$.content[*].price", contains(900.0, 300.0, 120.0, 50.0, 10.0)));
     }
 
     @Test
@@ -137,7 +137,7 @@ class ProductSortingTests {
                         .param("sortBy", "description")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains(
+                .andExpect(jsonPath("$.content[*].name", contains(
                         "Zephyr Speaker", "Alpha Laptop", "Mid Monitor", "Yankee Socks", "Beta Jacket")));
     }
 
@@ -148,7 +148,7 @@ class ProductSortingTests {
                         .param("sortDir", "sideways")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].price", contains(10.0, 50.0, 120.0, 300.0, 900.0)));
+                .andExpect(jsonPath("$.content[*].price", contains(10.0, 50.0, 120.0, 300.0, 900.0)));
     }
 
     @Test
@@ -158,7 +158,7 @@ class ProductSortingTests {
                         .param("sortDir", "")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains(
+                .andExpect(jsonPath("$.content[*].name", contains(
                         "Zephyr Speaker", "Alpha Laptop", "Mid Monitor", "Yankee Socks", "Beta Jacket")));
     }
 
@@ -167,8 +167,8 @@ class ProductSortingTests {
         mockMvc.perform(get("/api/products/category/{categoryId}", electronicsId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[*].name", contains("Zephyr Speaker", "Alpha Laptop", "Mid Monitor")));
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[*].name", contains("Zephyr Speaker", "Alpha Laptop", "Mid Monitor")));
     }
 
     @Test
@@ -178,8 +178,8 @@ class ProductSortingTests {
                         .param("sortDir", "desc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[*].name", contains("Alpha Laptop", "Mid Monitor", "Zephyr Speaker")));
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[*].name", contains("Alpha Laptop", "Mid Monitor", "Zephyr Speaker")));
     }
 
     @Test
@@ -189,8 +189,8 @@ class ProductSortingTests {
                         .param("sortDir", "asc")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", contains("Beta Jacket", "Yankee Socks")));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].name", contains("Beta Jacket", "Yankee Socks")));
     }
 
     @Test
@@ -200,6 +200,6 @@ class ProductSortingTests {
                         .param("sortDir", "up")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", contains("Zephyr Speaker", "Alpha Laptop", "Mid Monitor")));
+                .andExpect(jsonPath("$.content[*].name", contains("Zephyr Speaker", "Alpha Laptop", "Mid Monitor")));
     }
 }
