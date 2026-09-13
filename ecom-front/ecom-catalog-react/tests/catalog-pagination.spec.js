@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 const CARD = '.card';
-const PAGE_SIZE = 10;
+// Mirrors VITE_PAGE_SIZE so a small-page run asserts against the same size the app used.
+const PAGE_SIZE = Number(process.env.VITE_PAGE_SIZE) || 10;
 
 const indicator = (page) => page.getByTestId('page-indicator');
 const previous = (page) => page.getByRole('button', { name: 'Previous' });
@@ -15,7 +16,12 @@ test.describe('Catalog - server-side pagination', () => {
 
   test('requests the first page with an explicit size and shows the indicator', async ({ page }) => {
     await expect(indicator(page)).toContainText('Page 1 of');
-    await expect(page.locator(CARD)).toHaveCount(PAGE_SIZE, { timeout: 10000 });
+
+    // Never asserts a *full* page: the seeded catalog can be smaller than one
+    // page. What matters is that the page is capped at the requested size.
+    const cards = await page.locator(CARD).count();
+    expect(cards).toBeGreaterThan(0);
+    expect(cards).toBeLessThanOrEqual(PAGE_SIZE);
   });
 
   test('Previous is disabled on the first page', async ({ page }) => {

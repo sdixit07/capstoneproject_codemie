@@ -88,9 +88,54 @@ Results:
 - `npm run build` — **built in 1.06s**, 35 modules transformed, no errors.
 - `npx eslint src tests` — clean, exit 0.
 
-The Playwright e2e suite (`npm run test:e2e`) was **not executed** in this session:
-it needs a running backend plus dev server. The new `tests/catalog-pagination.spec.js`
-is therefore committed unverified against a live stack.
+### Docker
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Both images build clean: `capstoneproject_codemie-backend` (509MB) and
+`capstoneproject_codemie-frontend` (74.2MB). Neither Dockerfile needed changing —
+the backend copies all of `src/`, and the frontend runs `npm run build`.
+
+The paging contract was then verified against the running containers:
+
+| Check | Result |
+| --- | --- |
+| `GET /api/products` (default) | 200, full envelope |
+| `?page=0&size=3` / `?page=1&size=3` | ids `[1,2,3]` then `[4]`; `totalElements: 4`, `totalPages: 2` |
+| `?page=0&size=3&sortBy=price&sortDir=desc` | `sort: "price: DESC,id: ASC"` — the `id asc` tiebreaker is applied |
+| `?page=-1`, `?size=0`, `?size=51`, `?page=abc` | **400** for all four |
+| `GET /api/products/category/1?page=0&size=2` | 200, paged envelope |
+| Frontend via nginx | 200 |
+
+### End-to-end (Playwright)
+
+Run against the Docker backend, twice:
+
+```bash
+CI_CI=1 npx playwright test                             # default page size 10
+VITE_PAGE_SIZE=2 CI_CI=1 npx playwright test            # forces a multi-page catalog
+```
+
+- Default size 10: **9 passed, 3 skipped**.
+- `VITE_PAGE_SIZE=2`: **12 passed, 0 skipped**.
+
+The seeded catalog only holds 4 products, so at the default page size of 10 the
+whole catalog fits on one page and the multi-page specs (Next advancing, reset to
+page 0 on sort/category change) self-skip. `VITE_PAGE_SIZE` exists so those paths
+are actually exercised — without it the core pagination behaviour is untestable
+against the current seed data.
+
+Two issues were found and fixed by running these:
+
+1. `catalog-pagination.spec.js` asserted a *full* first page (`toHaveCount(10)`),
+   which fails on a 4-product catalog. It now asserts the page is non-empty and
+   capped at the page size.
+2. A dev server on any port other than 5173 gets no data at all: both controllers
+   hardcode `@CrossOrigin(origins = "http://localhost:5173")`, so the browser
+   blocks the requests. The e2e run must use port 5173.
 
 ## Files changed
 
@@ -111,7 +156,7 @@ is therefore committed unverified against a live stack.
 
 | File | Change |
 | --- | --- |
-| `src/api/productsApi.js` | `fetchProducts` now sends `page` and `size` and resolves to a normalised page object rather than a bare array. New exported `normalizePage` tolerates the `PagedResponse` DTO, a raw Spring Data `Page` (`number`, `pageable.pageNumber`), a bare array from an unpaged backend, and null/garbage. Paging params are clamped client-side so a bad URL cannot trigger a 400. |
+| `src/api/productsApi.js` | `DEFAULT_PAGE_SIZE` reads `VITE_PAGE_SIZE` (1..50, else 10), following the existing `VITE_API_BASE_URL` pattern. `fetchProducts` now sends `page` and `size` and resolves to a normalised page object rather than a bare array. New exported `normalizePage` tolerates the `PagedResponse` DTO, a raw Spring Data `Page` (`number`, `pageable.pageNumber`), a bare array from an unpaged backend, and null/garbage. Paging params are clamped client-side so a bad URL cannot trigger a 400. |
 | `src/Pagination.jsx` | **New.** Previous / Next buttons plus a `Page X of Y (N products)` indicator. Previous disabled on the first page, Next on the last. |
 | `src/App.jsx` | Holds a `page` state and one page of products instead of the whole catalog. Re-fetches on `page` / category / sort change; changing category, search or sort resets to page 0. Name search stays client-side but is applied **only to the current page** — the full catalog is never fetched. |
 | `src/api/productsApi.test.js` | Extended for paging params, clamping, and the `normalizePage` shape matrix. |
@@ -156,3 +201,6 @@ behaviour and fall back to `id` / `asc`.
 - The pre-existing `@Disabled` price-filter tests were left disabled.
 - No server-side name search was added, so the search box remains a
   within-current-page filter.
+- The hardcoded `@CrossOrigin(origins = "http://localhost:5173")` on both
+  controllers was left as-is. It is a real constraint (the frontend only works on
+  that port) but predates this task and widening it is a separate decision.

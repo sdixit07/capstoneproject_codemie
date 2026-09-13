@@ -10,9 +10,18 @@ export const DEFAULT_SORT_DIR = 'asc';
 
 // Kept in sync with the paging bounds on the backend (ProductService.MIN_SIZE / MAX_SIZE).
 export const DEFAULT_PAGE = 0;
-export const DEFAULT_PAGE_SIZE = 10;
 export const MIN_PAGE_SIZE = 1;
 export const MAX_PAGE_SIZE = 50;
+
+// Configurable so the e2e suite can force a multi-page catalog out of a small
+// seed dataset; anything outside the backend's bounds falls back to 10.
+const configuredPageSize = Number(import.meta.env.VITE_PAGE_SIZE);
+export const DEFAULT_PAGE_SIZE =
+  Number.isInteger(configuredPageSize) &&
+  configuredPageSize >= MIN_PAGE_SIZE &&
+  configuredPageSize <= MAX_PAGE_SIZE
+    ? configuredPageSize
+    : 10;
 
 const clampPage = (page) => {
   const parsed = Number(page);
