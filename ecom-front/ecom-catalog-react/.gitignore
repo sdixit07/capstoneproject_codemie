@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local env overrides (.env.example is committed)
+.env
+
+# Playwright artifacts
+test-results
+playwright-report
