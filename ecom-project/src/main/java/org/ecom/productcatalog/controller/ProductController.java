@@ -3,7 +3,9 @@ package org.ecom.productcatalog.controller;
 import org.ecom.productcatalog.Product;
 import org.ecom.productcatalog.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,5 +25,11 @@ public class ProductController {
     @GetMapping("category/{categoryId}")
     public List<Product> getProductByCategory(@PathVariable Long categoryId){
         return productService.getProductByCategory(categoryId);
+    }
+
+    @GetMapping("{id}")
+    public Product getProductById(@PathVariable Long id){
+        return productService.getProductById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + id));
     }
 }
