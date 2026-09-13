@@ -1,4 +1,4 @@
-# E-commerce SpringBoot Project
+codemie-claude --version# E-commerce SpringBoot Project
 
 This is a simple E-commerce application built with **Spring Boot**. The project comprises a front-end product catalog and a back-end database for managing products.
 
