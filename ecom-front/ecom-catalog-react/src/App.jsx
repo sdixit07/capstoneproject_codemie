@@ -5,6 +5,7 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import ProductList from './ProductList'
 import CategoryFilter from './CategoryFilter'
+import { fetchProducts, fetchCategories } from './api/productsApi'
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -12,16 +13,47 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortorder, setSortOrder] = useState("asc");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Initial load of categories and products
   useEffect(() => {
-    fetch('http://localhost:8080/api/products')
-      .then(response => response.json())
-      .then(data => setProducts(data))
-    
-    fetch('http://localhost:8080/api/categories')
-      .then(response => response.json())
-      .then(data => setCategories(data))
+    const loadInitialData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          fetchProducts(),
+          fetchCategories()
+        ]);
+        setProducts(productsData);
+        setCategories(categoriesData);
+      } catch (err) {
+        setError(err.message || 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadInitialData();
   }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const productsData = await fetchProducts(searchTerm);
+        setProducts(productsData);
+      } catch (err) {
+        setError(err.message || 'Failed to search products');
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const handleSearchChange = (event) =>{
     setSearchTerm(event.target.value);
@@ -35,11 +67,12 @@ function App() {
     setSelectedCategory(categoryId ? Number(categoryId) : null);
   };
 
+  // Apply client-side category filter and sort to server-returned products
   const filteredProducts = products
         .filter( product => {
           return(
             (selectedCategory ? product.category.id === selectedCategory : true)
-          ) && product.name.toLowerCase().includes(searchTerm.toLowerCase())
+          )
         })
         .sort((a,b) => {
           if(sortorder === "asc"){
@@ -63,6 +96,7 @@ function App() {
           type='text'
           className='form-control'
           placeholder='Search for products'
+          value={searchTerm}
           onChange={handleSearchChange} />
         </div>
 
@@ -74,13 +108,25 @@ function App() {
         </div>
       </div>
 
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="text-center my-4">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
 
       <div>
-        {filteredProducts.length ?(
-          //Display products
+        {!loading && filteredProducts.length ?(
           <ProductList products={filteredProducts} />
         ):(
-          <p>No prodcuts to display.</p>
+          !loading && <p>No products found.</p>
         )}
       </div>
       
