@@ -19,4 +19,11 @@ public class ProductService {
     public List<Product> getProductByCategory(Long categoryId){
         return productRepository.findByCategoryId(categoryId);
     }
+
+    public List<Product> searchProducts(String searchTerm){
+        if(searchTerm == null || searchTerm.trim().isEmpty()){
+            return getAllProducts();
+        }
+        return productRepository.findByNameContainingIgnoreCase(searchTerm.trim());
+    }
 }
