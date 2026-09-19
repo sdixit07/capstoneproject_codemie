@@ -1,7 +1,6 @@
-package org.ecom.productcatalog;
+package org.ecom.productcatalog.model;
 
 import jakarta.persistence.*;
-import org.ecom.productcatalog.model.Category;
 
 @Entity
 @Table

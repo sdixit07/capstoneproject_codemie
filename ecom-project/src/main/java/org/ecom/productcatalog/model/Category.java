@@ -2,7 +2,6 @@ package org.ecom.productcatalog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.ecom.productcatalog.Product;
 
 import java.util.List;
 

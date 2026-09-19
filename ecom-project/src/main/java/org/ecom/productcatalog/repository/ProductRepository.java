@@ -1,6 +1,6 @@
 package org.ecom.productcatalog.repository;
 
-import org.ecom.productcatalog.Product;
+import org.ecom.productcatalog.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

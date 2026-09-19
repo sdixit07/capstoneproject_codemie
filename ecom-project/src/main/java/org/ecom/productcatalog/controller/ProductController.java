@@ -1,6 +1,6 @@
 package org.ecom.productcatalog.controller;
 
-import org.ecom.productcatalog.Product;
+import org.ecom.productcatalog.model.Product;
 import org.ecom.productcatalog.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
