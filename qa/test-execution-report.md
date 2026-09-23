@@ -1,6 +1,6 @@
 # Test Execution Report
 
-**Date:** 2026-09-23
+**Date:** 2026-09-23 19:20
 **Branch:** `feat/product-entity-package-cleanup`
 **Scope:** Backend Maven test suite (`ecom-project/`), executed against the `Product` JPA entity package-relocation refactor (entity moved from `org.ecom.productcatalog.Product` to `org.ecom.productcatalog.model.Product`, matching `Category`) and the newly added `ProductDetail` frontend page (no backend changes).
 
