@@ -64,7 +64,7 @@ The table above shows the various API methods, URL paths, request/response forma
 
 4. Open the application in your browser:
    ```bash
-   http://localhost:8080/api/products
+   http://localhost:5173
 
 ---
 

@@ -1,6 +1,6 @@
 package org.ecom.productcatalog.controller;
 
-import org.ecom.productcatalog.Product;
+import org.ecom.productcatalog.model.Product;
 import org.ecom.productcatalog.model.Category;
 import org.ecom.productcatalog.repository.CategoryRepository;
 import org.ecom.productcatalog.repository.ProductRepository;
