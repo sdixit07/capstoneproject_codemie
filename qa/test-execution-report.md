@@ -1,51 +1,62 @@
-# Test Execution Report — Product Details Feature
+# QA Test Execution Report
 
-**Branch:** `feat/product-details-by-id` (PR [#17](https://github.com/sdixit07/capstoneproject_codemie/pull/17))
-**Scope:** `GET /api/products/{id}` backend endpoint and `/products/:id` frontend page, per `qa/manual/product-details.feature`.
+**Branch:** `feat/product-details-by-id`
+**Date:** 2026-09-30
 
-## Summary
+## Backend tests (JUnit / Maven)
 
-| Suite | Result |
+**Command:** `cd ecom-project && ./mvnw -q test`
+
+**Result:** All tests passed.
+
+| Test class | Result |
 |---|---|
-| Backend tests (`mvn test`) | ✅ Pass |
-| Frontend unit tests (`npm test`) | ✅ Pass (feature-relevant) — 1 pre-existing unrelated failure |
-| Frontend build (`npm run build`) | ✅ Pass |
-| Playwright E2E — product details (`tests/product-details.spec.js`) | ✅ Pass (4/4) |
-| Playwright E2E — catalog pagination (`tests/catalog-search-pagination.spec.js`) | ❌ 3 pre-existing failures, unrelated |
+| `org.ecom.productcatalog.controller.ProductControllerGetByIdTest` | Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 |
+| `org.ecom.productcatalog.controller.ProductControllerIT` | Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 |
+| `org.ecom.productcatalog.EcomProjectApplicationTests` | Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 |
+| **Total** | **Tests run: 6, Failures: 0, Errors: 0, Skipped: 0** |
 
-## Backend tests
+`./mvnw -q test` exited with code 0. No `Tests run:` line was printed to console under `-q`; the per-class summaries above were pulled from `target/surefire-reports/*.txt`.
 
-`cd ecom-project && ./mvnw -q test` — all tests pass, including `ProductControllerGetByIdTest` (200/404/400 cases for `GET /api/products/{id}`).
+## Frontend E2E tests (Playwright)
 
-## Frontend unit tests
+**Setup:**
+- `npm ci` — completed successfully (274 packages installed, exit code 0; `npm audit` reports 19 pre-existing vulnerabilities in dependencies, no action taken as it is out of scope).
+- `npx playwright install --with-deps` — completed successfully (exit code 0, no output; browsers were already present/no missing OS deps).
 
-`npm test` (Vitest) — 2 passed suites, 5/5 individual tests:
-- `src/ProductList.test.jsx` — 1 test passed
-- `src/pages/ProductDetail.test.jsx` — 4 tests passed
+**Command:** `npm run test:e2e` (runs `playwright test`, chromium project, 2 workers)
 
-One pre-existing, unrelated failure:
-- `src/api/productsApi.test.js` — fails to resolve import `./productsApi`; that module was never created (leftover scaffolding from an unrelated, unimplemented feature). Not a regression from this branch.
+**Result:** 8 tests total — **5 passed, 3 failed, 0 flaky** (run duration ~1.4m).
 
-`npm run build` completes successfully.
+| Spec file | Test | Result |
+|---|---|---|
+| `product-details.spec.js` | clicking a catalog card navigates to its product details page | passed |
+| `product-details.spec.js` | deep link to an existing product id shows full details | passed |
+| `product-details.spec.js` | deep link to a non-existent product id shows not-found message with back link | passed |
+| `product-details.spec.js` | deep link to a non-numeric product id shows an error state | passed |
+| `catalog-search-pagination.spec.js` | loads initial products and shows pagination controls | **failed** |
+| `catalog-search-pagination.spec.js` | can search by keyword and resets to page 1 behavior | **failed** |
+| `catalog-search-pagination.spec.js` | can change sort order and it updates results | passed |
+| `catalog-search-pagination.spec.js` | can paginate to next page and updates the list | **failed** |
 
-## Playwright E2E — Product Details
+All 4 tests in `product-details.spec.js` (the feature under test on this branch) pass.
 
-Ran against the already-running `docker compose` stack (`backend` on `localhost:8080`, `frontend` on `localhost:5173`); `playwright.config.js` `baseURL`/`reuseExistingServer` correctly reused these instead of starting duplicate dev servers.
+## Notes / Failures
 
-| Scenario | Result |
-|---|---|
-| Click a catalog card → navigates to `/products/{id}` with matching title | ✅ Pass |
-| Deep link to a valid id (`/products/1`) → full details rendered | ✅ Pass |
-| Deep link to an out-of-range id (`/products/999999`) → "Product not found" + back link | ✅ Pass |
-| Deep link to an invalid id (`/products/abc`) → error state shown | ✅ Pass |
+All backend tests pass. All frontend tests for the product-details feature (the scope of this branch) pass.
 
-**UX note (not a blocking bug):** the backend correctly returns 400 for a non-numeric id, but `src/pages/ProductDetail.jsx` (~lines 24-31) doesn't distinguish a 400 from other non-404 failures — it shows a generic "Unable to load product / Request failed with status 400" message rather than a specific "invalid product id" message. The error is surfaced to the user either way; this is a cosmetic follow-up, not a defect blocking the PR.
+The 3 failures are all in `catalog-search-pagination.spec.js`, which is unrelated to the product-details feature being delivered on this branch. Root cause investigated in `ecom-front/ecom-catalog-react/src/pages/Catalog.jsx`: the current catalog page implementation fetches the full product list from `/api/products` in one call and does client-side filtering/sorting only — there is no pagination UI (no "Prev"/"Next" buttons, no `pagination` component) and no server-side query flow anywhere in `src/`. The spec file was written against a server-side paginated catalog that does not exist in the current implementation.
 
-## Pre-existing failures (unrelated to this branch)
+1. **`loads initial products and shows pagination controls`**
+   - Error: `expect(locator).toBeVisible() failed` — `getByRole('button', { name: /Prev/i })` — element not found (timeout 10000ms).
+   - Cause: Catalog page has no Prev button. Mitigation: either implement server-side pagination with Prev/Next controls in `Catalog.jsx`, or remove/update this test if pagination is out of scope.
 
-- `tests/catalog-search-pagination.spec.js` — 3 of 5 specs fail because the catalog has no pagination UI (no Prev/Next controls exist in `src/pages/Catalog.jsx`, which fetches and filters all products client-side). This predates the product-details feature and is out of scope for this PR.
-- `src/api/productsApi.test.js` — broken import noted above.
+2. **`can search by keyword and resets to page 1 behavior`**
+   - Error: `expect(locator).toBeDisabled() failed` — `getByRole('button', { name: /Prev/i })` — element not found (timeout 10000ms).
+   - Cause: same as above — no Prev button exists to assert against.
 
-## Conclusion
+3. **`can paginate to next page and updates the list`**
+   - Error: `Test timeout of 60000ms exceeded` while `locator.click` waited for `getByRole('button', { name: /Next/i })`.
+   - Cause: same as above — no Next button exists to click.
 
-The Product Details feature (backend endpoint + frontend page/routing) passes all backend, frontend, and E2E checks. No regressions were introduced. Pre-existing gaps (catalog pagination UI, `productsApi.test.js`) are flagged for separate follow-up and were not modified as part of this QA pass.
+These 3 failures are pre-existing and unrelated to the `feat/product-details-by-id` changes; they were not introduced by this branch. No action taken on them here beyond documenting root cause, since implementing catalog pagination is outside the scope of the product-details feature.
