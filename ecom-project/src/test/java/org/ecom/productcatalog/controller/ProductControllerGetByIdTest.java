@@ -91,4 +91,17 @@ class ProductControllerGetByIdTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
     }
+
+    @Test
+    void getProductById_negativeId_returns404WithApiErrorBody() throws Exception {
+        // A negative id is a syntactically valid Long (unlike "not-a-number"), so it must
+        // still be routed as a lookup miss (404), not a type-mismatch (400).
+        mockMvc.perform(get("/api/products/{id}", -1L).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.path").value("/api/products/-1"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }
