@@ -1,4 +1,12 @@
 {
+  "name": "ecom-front",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./ecom-catalog-react/src/main.jsx",
+  "exports": {
+    ".": "./ecom-catalog-react/src/main.jsx"
+  },
   "dependencies": {
     "bootstrap": "^5.3.5",
     "react-bootstrap": "^2.10.9"

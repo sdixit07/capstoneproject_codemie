@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.ecom</groupId>
+    <artifactId>capstoneproject-codemie</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>capstoneproject_codemie</name>
+    <description>Repository-level aggregator for the e-commerce capstone project.</description>
+
+    <modules>
+        <module>ecom-project</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-boot.version>3.4.4</spring-boot.version>
+        <frontend.node.version>20</frontend.node.version>
+        <frontend.entry-point>ecom-front/ecom-catalog-react/src/main.jsx</frontend.entry-point>
+        <backend.entry-point>ecom-project/src/main/java/org/ecom/productcatalog/EcomProjectApplication.java</backend.entry-point>
+    </properties>
+</project>
+

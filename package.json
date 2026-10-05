@@ -1,0 +1,46 @@
+{
+  "name": "capstoneproject_codemie",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo for the Codemie e-commerce capstone project with a Spring Boot backend and React/Vite frontend.",
+  "type": "module",
+  "packageManager": "npm@10",
+  "workspaces": [
+    "ecom-front/ecom-catalog-react"
+  ],
+  "main": "./ecom-front/ecom-catalog-react/src/main.jsx",
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "frontend:build": "npm --prefix ./ecom-front/ecom-catalog-react run build",
+    "frontend:test": "npm --prefix ./ecom-front/ecom-catalog-react run test",
+    "backend:test": "./ecom-project/mvnw -f ./ecom-project/pom.xml test"
+  },
+  "entryPoints": {
+    "frontend": "./ecom-front/ecom-catalog-react/src/main.jsx",
+    "backend": "./ecom-project/src/main/java/org/ecom/productcatalog/EcomProjectApplication.java"
+  },
+  "coreDependencies": {
+    "frontend": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0",
+      "bootstrap": "^5.3.3",
+      "vite": "^6.3.1"
+    },
+    "backend": {
+      "java": "21",
+      "spring-boot": "3.4.4",
+      "spring-boot-starter-web": "3.4.4",
+      "spring-boot-starter-data-jpa": "3.4.4",
+      "mysql-connector-j": "runtime",
+      "h2": "runtime"
+    }
+  },
+  "languageVersions": {
+    "javascript": "Node 20.x",
+    "java": "21"
+  }
+}
+
