@@ -39,6 +39,11 @@ Here is an image of the API table showing the various endpoints:
 The table above shows the various API methods, URL paths, request/response formats, and descriptions.
 
 ---
+## Project Entry Points
+
+- **Frontend:** `ecom-front/ecom-catalog-react/src/main.jsx` (React + Vite application)
+- **Backend:** `ecom-back/src/main/java/com/example/EcommerceApplication.java` (Spring Boot REST API)
+
 
 ## Technologies Used
 - **Backend**: Spring Boot, Java
