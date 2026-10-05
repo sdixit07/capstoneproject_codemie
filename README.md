@@ -52,7 +52,7 @@ The table above shows the various API methods, URL paths, request/response forma
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Harishanan/E-commerce-SpringBoot.git
+   git clone https://github.com/sdixit07/capstoneproject_codemie.git
 
 2. Navigate to the project directory:
    ```bash
