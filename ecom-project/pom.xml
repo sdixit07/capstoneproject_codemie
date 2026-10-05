@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
-        <start-class>org.ecom.productcatalog.ProductcatalogApplication</start-class>
+        <start-class>org.ecom.productcatalog.EcomProjectApplication</start-class>
     </properties>
     <dependencies>
         <dependency>
@@ -75,7 +75,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.ecom.productcatalog.ProductcatalogApplication</mainClass>
+                    <mainClass>org.ecom.productcatalog.EcomProjectApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
