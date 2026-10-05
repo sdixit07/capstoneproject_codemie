@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "main": "./src/main.jsx",
+  "exports": {
+    ".": "./src/main.jsx"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
